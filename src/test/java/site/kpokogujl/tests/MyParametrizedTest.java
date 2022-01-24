@@ -4,7 +4,9 @@ import com.codeborne.selenide.Configuration;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.stream.Stream;
 
@@ -20,22 +22,49 @@ public class MyParametrizedTest {
         Configuration.browserSize="1920x1080";
     }
 
-    static Stream<Arguments> loginTestValueSource() {
+    static Stream<Arguments> secondLoginTestValueSource() {
         return Stream.of(
-                Arguments.of("testtest@test.test", "654321", "NEsergey asdf"),
-                Arguments.of("testvova@test.test", "098765", "Vova Test")
+                Arguments.of("saa", "654321", "Your username is invalid!"),
+                Arguments.of("tomsmith", "SuperSecretPassword!", "You logged into a secure area!")
         );
     }
 
-    @MethodSource("loginTestValueSource")
+    @MethodSource("secondLoginTestValueSource")
     @ParameterizedTest()
-    void someTest(String login, String pass, String fullname){
-        open("http://automationpractice.com/index.php?controller=authentication&back=my-account");
-        $("#email").setValue(login);
-        $("#passwd").setValue(pass);
-        $("#SubmitLogin").click();
+    void authTest(String username, String password, String expectedResult){
+        open("http://the-internet.herokuapp.com/login");
+        $("#username").setValue(username);
+        $("#password").setValue(password);
+        $(".radius").click();
 
-        $$(".header_user_info").find(text(fullname)).shouldBe(visible); //shouldHave(text((fullname)));
+        $("#flash").shouldHave(text(expectedResult)).shouldBe(visible); //shouldHave(text((fullname)));
         closeWebDriver();
+    }
+
+    @ValueSource(strings = {"Name1", "Name2"})
+    @ParameterizedTest()
+    void checkboxTest(String name){
+        open("https://demoqa.com/text-box");
+
+        $("#userName").setValue(name);
+        $("#submit").click();
+
+        $("#name").shouldHave(text(name));
+    }
+
+    @CsvSource(value = {
+            "Name, 123",
+            "Surname, 987"
+    })
+    @ParameterizedTest()
+    void checkboxTest(String name, int address){
+        open("https://demoqa.com/text-box");
+
+        $("#userName").setValue(name);
+        $("#permanentAddress").setValue(String.valueOf(address));
+        $("#submit").click();
+
+        $("#output").$("#name").shouldHave(text(name));
+        $("#output").$("#permanentAddress").shouldHave(text(String.valueOf(address)));
     }
 }
